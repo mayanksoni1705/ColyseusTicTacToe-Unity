@@ -58,8 +58,9 @@ export class MyRoom extends Room<MyRoomState> {
     }
 
     if (client.sessionId == this.state.currentTurn) {
+      var keysArray = Array.from(this.state.players.keys()); 
       var index = data;
-      var move =  client.sessionId == this.state.players.keys().next().value ? 1 : 2;
+      var move =  client.sessionId == keysArray[0] ? 1 : 2;
       this.state.board[index] = move;
     }
     
@@ -67,6 +68,8 @@ export class MyRoom extends Room<MyRoomState> {
     {
       this.randomMoveTimeout.clear();
     }
+    
+    this.state.currentTurn == keysArray[0] ? keysArray[1] : keysArray[0];
     this.setAutoMoveTimeout();
   }
   
