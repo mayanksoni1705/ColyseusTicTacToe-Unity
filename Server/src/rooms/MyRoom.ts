@@ -36,6 +36,14 @@ export class MyRoom extends Room<MyRoomState> {
     }
   }
 
+  onLeave (client: Client, consented: boolean) {
+    console.log(client.sessionId, "left!");
+  }
+
+  onDispose() {
+    console.log("room", this.roomId, "disposing...");
+  }
+
   setAutoMoveTimeout() {
     if (this.randomMoveTimeout) {
       this.randomMoveTimeout.clear();
@@ -48,11 +56,18 @@ export class MyRoom extends Room<MyRoomState> {
     if (this.state.winner || this.state.draw) {
       return false;
     }
-  
 
     if (client.sessionId == this.state.currentTurn) {
-      
+      var index = data;
+      var move =  client.sessionId == this.state.players.keys().next().value ? 1 : 2;
+      this.state.board[index] = move;
     }
+    
+    if(this.randomMoveTimeout != null)
+    {
+      this.randomMoveTimeout.clear();
+    }
+    this.setAutoMoveTimeout();
   }
   
   doRandomMove() {
@@ -63,19 +78,10 @@ export class MyRoom extends Room<MyRoomState> {
       if(this.state.board[x*BOARD_WIDTH+y] == 0)
       {
         var index = x+ BOARD_WIDTH * y; 
-        this.
-        this.broadcast("broadCastMessage","Hi");
+        this.playerAction(currentTurn, index);
+        return;
       }
   }
+  }
 }
-  
-
-  onLeave (client: Client, consented: boolean) {
-    console.log(client.sessionId, "left!");
-  }
-
-  onDispose() {
-    console.log("room", this.roomId, "disposing...");
-  }
-
 }
