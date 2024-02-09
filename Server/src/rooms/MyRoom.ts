@@ -1,0 +1,81 @@
+import { Room,Delayed, Client } from "@colyseus/core";
+import { MyRoomState } from "./schema/MyRoomState";
+
+const TURN_TIMEOUT: number = 5;
+const BOARD_WIDTH : number = 3; 
+
+export class MyRoom extends Room<MyRoomState> {
+   maxClients : number = 2;
+   randomMoveTimeout: Delayed;
+   
+
+  onCreate (options: any) {
+    this.setState(new MyRoomState());
+    this.autoDispose=true;
+    this.maxClients= 2;
+
+
+    console.log("oncreated==",options);
+    console.log("roomId==",this.roomId);
+    
+    this.onMessage("UpdateSession", (client, data) => {
+      console.log("client=",client.sessionId,"data=",data);
+      this.broadcast("broadCastMessage","Hi");
+    });
+  }
+
+  onJoin (client: Client, options: any) {
+    console.log(client.sessionId, "joined!");
+    this.state.players.set(client.sessionId, true); 
+
+    if(this.state.players.size == 2)
+    {
+      this.state.currentTurn = client.sessionId;
+      this.setAutoMoveTimeout();    
+      this.lock();
+    }
+  }
+
+  setAutoMoveTimeout() {
+    if (this.randomMoveTimeout) {
+      this.randomMoveTimeout.clear();
+    }
+
+    this.randomMoveTimeout = this.clock.setTimeout(() => this.doRandomMove(), TURN_TIMEOUT * 1000);
+  }
+
+  playerAction (client: Client, data: any) {
+    if (this.state.winner || this.state.draw) {
+      return false;
+    }
+  
+
+    if (client.sessionId == this.state.currentTurn) {
+      
+    }
+  }
+  
+  doRandomMove() {
+    for(let x: number = 0 ; x< BOARD_WIDTH; x++)
+  {
+    for(let y: number = 0 ; y< BOARD_WIDTH; y++)
+    {
+      if(this.state.board[x*BOARD_WIDTH+y] == 0)
+      {
+        var index = x+ BOARD_WIDTH * y; 
+        this.
+        this.broadcast("broadCastMessage","Hi");
+      }
+  }
+}
+  
+
+  onLeave (client: Client, consented: boolean) {
+    console.log(client.sessionId, "left!");
+  }
+
+  onDispose() {
+    console.log("room", this.roomId, "disposing...");
+  }
+
+}
