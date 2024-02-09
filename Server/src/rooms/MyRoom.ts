@@ -47,7 +47,6 @@ export class MyRoom extends Room<MyRoomState> {
 
   setAutoMoveTimeout() {
     this.randomMoveTimeout.reset();
-    
     this.randomMoveTimeout = this.clock.setTimeout(() => this.doRandomMove(), TURN_TIMEOUT * 1000);
   }
 
@@ -98,11 +97,11 @@ export class MyRoom extends Room<MyRoomState> {
 
     if (client.sessionId == this.state.currentTurn) {
       var keysArray = Array.from(this.state.players.keys()); 
-      var index = data;
+      var index = data.x+ BOARD_WIDTH * data.y; 
       var move =  client.sessionId == keysArray[0] ? 1 : 2;
       this.state.board[index] = move;
       // check win 
-      var winner = this.checkWin(x,y,move);
+      var winner = this.checkWin(data.x,data.y,move);
       if(this.checkDraw)
       {
         this.state.draw = true;
@@ -120,8 +119,6 @@ export class MyRoom extends Room<MyRoomState> {
     {
       if(this.state.board[x*BOARD_WIDTH+y] == 0)
       {
-        var index = x+ BOARD_WIDTH * y; 
-        
         this.playerAction({ sessionId } as Client, { x, y });
         return;
       }
