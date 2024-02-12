@@ -51,47 +51,50 @@ export class MyRoom extends Room<MyRoomState> {
     this.randomMoveTimeout = this.clock.setTimeout(() => this.doRandomMove(), TURN_TIMEOUT * 1000);
   }
 
-  checkWin(x : number, y : number, player : number)    
-  {
-    
-    // check horizontal 
-    for (let y = 0; y < BOARD_WIDTH; y++) {
-      if (this.state.board[y] == player && this.state.board[y + 1] == player && this.state.board[y + 2] == player) {
-        this.state.winner = this.state.currentTurn;
-        console.log("horizontal" + "winner=" + this.state.winner);  
-        return this.state.winner;
-      }
-
-      // check vertical
-      for (let x = 0; x < BOARD_WIDTH; x++) {
-        if(this.state.board[x] == player && this.state.board[x + 3] == player && this.state.board[x + 6] == player) {
-          this.state.winner = this.state.currentTurn;
-          console.log("vertical" + "winner=" + this.state.winner);  
-          return this.state.winner;
-        } 
-
-        // check diagonal 
-        if(x == y && this.state.board[0] == player && this.state.board[4] == player && this.state.board[8] == player) {
-          this.state.winner = this.state.currentTurn;
-          console.log("diagonal" + "winner=" + this.state.winner);  
-          return this.state.winner; 
-        }
-
-        //check backdiagonal
-        if (x + y === BOARD_WIDTH - 1 && this.state.board[2] === player && this.state.board[4] === player && this.state.board[6] === player) {
-          this.state.winner = this.state.currentTurn;
-          console.log("back diagonal" + "winner=" + this.state.winner); 
-          return this.state.winner;
-        } 
-        
-      }
-      
+  checkWin(x : number, y : number, player : number) {
+    // Check horizontal line
+    if (this.state.board[y * BOARD_WIDTH] === player &&
+        this.state.board[y * BOARD_WIDTH + 1] === player &&
+        this.state.board[y * BOARD_WIDTH + 2] === player) {
+        return this.state.currentTurn;
     }
-  }
 
+    // Check vertical line
+    if (this.state.board[x] === player &&
+        this.state.board[x + BOARD_WIDTH] === player &&
+        this.state.board[x + BOARD_WIDTH * 2] === player) {
+        return this.state.currentTurn;
+    }
+
+    // Check main diagonal
+    if (x === y && this.state.board[0] === player &&
+        this.state.board[4] === player &&
+        this.state.board[8] === player) {
+        return this.state.currentTurn;
+    }
+
+    // Check reverse diagonal
+    if (x + y === BOARD_WIDTH - 1 && this.state.board[2] === player &&
+        this.state.board[4] === player &&
+        this.state.board[6] === player) {
+        return this.state.currentTurn;
+    }
+
+    return null; // No winner yet
+}
   checkDraw() {
     let totalMoves = this.state.board.filter(element => element !== 0).length;  
     return totalMoves === this.state.board.length;
+}
+
+printBoard() {
+  for (let row = 0; row < BOARD_WIDTH; row++) {
+      let rowStr = "";
+      for (let col = 0; col < BOARD_WIDTH; col++) {
+          rowStr += this.state.board[row * BOARD_WIDTH + col] + " ";
+      }
+      console.log(rowStr);
+  }
 }
 
   playerAction (client: Client, data: any) {
@@ -102,9 +105,10 @@ export class MyRoom extends Room<MyRoomState> {
     if (client.sessionId == this.state.currentTurn) {
       var keysArray = Array.from(this.state.players.keys()); 
       var index = data.x+ BOARD_WIDTH * data.y; 
-      var move =  client.sessionId == keysArray[0] ? 1 : 2;
+      var move=  client.sessionId == keysArray[0] ? 1 : 2;
       this.state.board[index] = move;
-      // check win 
+      console.log("Updated Board:");
+      this.printBoard();
       var winner = this.checkWin(data.x,data.y,move);
       if(winner != null)
       {
