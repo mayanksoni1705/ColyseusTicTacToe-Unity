@@ -1,12 +1,12 @@
 import { Room,Delayed, Client } from "@colyseus/core";
 import { MyRoomState } from "./schema/MyRoomState";
 
-const TURN_TIMEOUT: number = 5;
+const TURN_TIMEOUT: number = 30;
 const BOARD_WIDTH : number = 3; 
 
 export class MyRoom extends Room<MyRoomState> {
    maxClients : number = 2;
-   randomMoveTimeout: Delayed;
+   public randomMoveTimeout: Delayed;
    
 
   onCreate (options: any) {
@@ -46,7 +46,8 @@ export class MyRoom extends Room<MyRoomState> {
   }
 
   setAutoMoveTimeout() {
-    this.randomMoveTimeout.reset();
+   
+    this.randomMoveTimeout?.reset();
     this.randomMoveTimeout = this.clock.setTimeout(() => this.doRandomMove(), TURN_TIMEOUT * 1000);
   }
 
@@ -57,6 +58,7 @@ export class MyRoom extends Room<MyRoomState> {
     for (let y = 0; y < BOARD_WIDTH; y++) {
       if (this.state.board[y] == player && this.state.board[y + 1] == player && this.state.board[y + 2] == player) {
         this.state.winner = this.state.currentTurn;
+        console.log("horizontal" + "winner=" + this.state.winner);  
         return this.state.winner;
       }
 
@@ -64,18 +66,21 @@ export class MyRoom extends Room<MyRoomState> {
       for (let x = 0; x < BOARD_WIDTH; x++) {
         if(this.state.board[x] == player && this.state.board[x + 3] == player && this.state.board[x + 6] == player) {
           this.state.winner = this.state.currentTurn;
+          console.log("vertical" + "winner=" + this.state.winner);  
           return this.state.winner;
         } 
 
         // check diagonal 
         if(x == y && this.state.board[0] == player && this.state.board[4] == player && this.state.board[8] == player) {
           this.state.winner = this.state.currentTurn;
+          console.log("diagonal" + "winner=" + this.state.winner);  
           return this.state.winner; 
         }
 
         //check backdiagonal
         if (x + y === BOARD_WIDTH - 1 && this.state.board[2] === player && this.state.board[4] === player && this.state.board[6] === player) {
           this.state.winner = this.state.currentTurn;
+          console.log("back diagonal" + "winner=" + this.state.winner); 
           return this.state.winner;
         } 
         
@@ -84,17 +89,16 @@ export class MyRoom extends Room<MyRoomState> {
     }
   }
 
-  checkDraw()
-  {
-     var space = this.state.board.find(element => element == 0);
-     return !space;
-  }
+  checkDraw() {
+    let totalMoves = this.state.board.filter(element => element !== 0).length;  
+    return totalMoves === this.state.board.length;
+}
 
   playerAction (client: Client, data: any) {
     if (this.state.winner || this.state.draw) {
       return false;
     }
-
+    console.log( data.x +',' +data.y );
     if (client.sessionId == this.state.currentTurn) {
       var keysArray = Array.from(this.state.players.keys()); 
       var index = data.x+ BOARD_WIDTH * data.y; 
@@ -102,27 +106,35 @@ export class MyRoom extends Room<MyRoomState> {
       this.state.board[index] = move;
       // check win 
       var winner = this.checkWin(data.x,data.y,move);
-      if(this.checkDraw)
+      if(winner != null)
+      {
+        this.state.winner = winner;
+        this.randomMoveTimeout?.reset();  
+        return; 
+      }
+      if(this.checkDraw())
       {
         this.state.draw = true;
+        this.randomMoveTimeout?.reset();  
+        return;
       }
-      this.state.currentTurn == keysArray[0] ? keysArray[1] : keysArray[0];
+      this.state.currentTurn = (this.state.currentTurn === keysArray[0]) ? keysArray[1] : keysArray[0];
+      console.log('Player Turn Switched to ' + this.state.currentTurn); 
       this.setAutoMoveTimeout();
     }
   }
   
   doRandomMove() {
     const sessionId = this.state.currentTurn;
-    for(let x: number = 0 ; x< BOARD_WIDTH; x++)
-  {
-    for(let y: number = 0 ; y< BOARD_WIDTH; y++)
-    {
-      if(this.state.board[x*BOARD_WIDTH+y] == 0)
-      {
-        this.playerAction({ sessionId } as Client, { x, y });
-        return;
-      }
-  }
-  }
+    for (let x = 0; x < BOARD_WIDTH; x++) {
+        for (let y = 0; y < BOARD_WIDTH; y++) {
+            const index = x + y * BOARD_WIDTH;
+            if (this.state.board[index] === 0) {
+                console.log("x=", x, "y=", y, "index=", index, "sessionId=", sessionId);
+                this.playerAction({ sessionId } as Client, { x, y });
+                return;
+            }
+        }
+    }
 }
 }

@@ -6,6 +6,7 @@ using UnityEngine;
 using ColyseusTicTacToe.ColyseusStates;
 using UnityEngine.UI;
 using TMPro;
+using Unity.VisualScripting;
 
 public class GameManager : MonoBehaviour
 {
@@ -58,8 +59,28 @@ public class GameManager : MonoBehaviour
         room.State.OnCurrentTurnChange(OnCurrentTurnChange);
         room.State.OnDrawChange(OnDrawChanged);
         room.State.OnWinnerChange(OnWinnerChanged);
-
+        InitializeButtons();
         room.Send("UpdateSession", "myname = " + room.SessionId);
+    }
+
+    private void InitializeButtons()
+    {
+        for (int x = 0; x < 3; x++)
+        {
+            for (int y= 0; y < 3; y++)
+            {
+                int index = x + 3 * y;
+                PlayerActionMessage data = new PlayerActionMessage { i = x, j = y };
+                board[index].onClick.AddListener(() => SendDataToServer(data)) ;
+            }
+        }
+    }
+
+    private void SendDataToServer(PlayerActionMessage data)
+    {
+        Debug.Log("Sending to server" + data.i + "," + data.j);
+        var messageData = new { x = data.i, y = data.j };
+        room.Send("action",messageData);
     }
 
     private void OnWinnerChanged(string currentValue, string previousValue)
@@ -67,11 +88,11 @@ public class GameManager : MonoBehaviour
         waitingForPlayersText.SetActive(true);
         if (currentValue == room.SessionId)
         {
-            waitingForPlayersText.GetComponent<TextMeshProUGUI>().text = "You won";
+            waitingForPlayersText.GetComponentInChildren<TextMeshProUGUI>().text = "You won";
         }
         else
         {
-            waitingForPlayersText.GetComponent<TextMeshProUGUI>().text = "You lost";   
+            waitingForPlayersText.GetComponentInChildren<TextMeshProUGUI>().text = "You lost";   
         }
     }
 
@@ -80,22 +101,32 @@ public class GameManager : MonoBehaviour
         if (currentValue == true)
         {
             waitingForPlayersText.SetActive(true);
-            waitingForPlayersText.GetComponent<TextMeshProUGUI>().text = "Draw";
+            waitingForPlayersText.GetComponentInChildren<TextMeshProUGUI>().text = "Draw";
         }
     }
 
     private void OnCurrentTurnChange(string currentValue, string previousValue)
     {
+        Debug.Log(currentValue);
         if (currentValue == room.SessionId)
         {
             waitingForPlayersText.SetActive(false);
+            turnText.text = "It's your turn";  
             Debug.Log("It's my turn");
         }
         else
         {
             waitingForPlayersText.SetActive(true);
-            waitingForPlayersText.GetComponent<TextMeshProUGUI>().text = "Waiting for opponent's turn";
+            turnText.text = "It's not your turn";   
+            waitingForPlayersText.GetComponentInChildren<TextMeshProUGUI>().text = "Waiting for opponent's turn";
             Debug.Log("It's not my turn");
         }
     }
+}
+
+[Serializable]
+public class PlayerActionMessage 
+{
+    public int i;
+    public int j;
 }
