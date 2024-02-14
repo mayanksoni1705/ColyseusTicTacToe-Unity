@@ -14,7 +14,7 @@ This project is a multiplayer Tic Tac Toe game developed in Unity, demonstrating
 
 To run the Tic Tac Toe game locally, follow these steps:
 
-1. Clone the repository: `git clone [https://github.com/your-username/colyseus-unity-tic-tac-toe.git](https://github.com/mayanksoni1705/ColyseusTicTacToe-Unity.git)`
+1. Clone the repository: `git clone https://github.com/mayanksoni1705/ColyseusTicTacToe-Unity.git`
 2. Open the project in Unity.
 3. Run the game in the Unity Editor or build it for your desired platform.
 4. Connect multiple clients to the server to start playing Tic Tac Toe with friends in real time.
