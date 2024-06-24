@@ -22,6 +22,7 @@ export class MyRoom extends Room<MyRoomState> {
     this.onMessage("UpdateSession", (client, data) => {
       console.log("client=",client.sessionId,"data=",data);
       this.broadcast("broadCastMessage","Hi");
+      
     });
   }
 
